@@ -1,0 +1,80 @@
+#generate_movielens_like......
+""Generate a synthetic MovieLens-like dataset: movies.csv, users.csv, ratings.csv"""
+import argparse
+import os
+import random
+from datetime import datetime, timedelta
+import pandas as pd
+import numpy as np
+
+def generate_movies(n_movies=1000, seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    genres = ['Action','Comedy','Drama','Romance','Sci-Fi','Horror','Documentary','Thriller','Family']
+    movies = []
+    for i in range(n_movies):
+        movie_id = f'M{i+1:05d}'
+        title = f'Movie {i+1}'
+        year = random.randint(1980,2022)
+        movie_genres = '|'.join(np.random.choice(genres, size=np.random.randint(1,3), replace=False))
+        movies.append({'movieId': movie_id, 'title': title, 'year': year, 'genres': movie_genres})
+    return pd.DataFrame(movies)
+
+def generate_users(n_users=1000, seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    users = []
+    locations = ['USA','UK','Canada','Germany','India','Australia']
+    for i in range(n_users):
+        user_id = f'U{i+1:05d}'
+        age = np.random.randint(15,75)
+        gender = np.random.choice(['M','F'])
+        location = np.random.choice(locations)
+        users.append({'userId': user_id, 'age': age, 'gender': gender, 'location': location})
+    return pd.DataFrame(users)
+
+def generate_ratings(n_users, n_movies, n_ratings=20000, seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    user_ids = [f'U{i+1:05d}' for i in range(n_users)]
+    movie_ids = [f'M{i+1:05d}' for i in range(n_movies)]
+    ratings = []
+    start = datetime(2018,1,1)
+    for _ in range(n_ratings):
+        u = random.choice(user_ids)
+        m = random.choice(movie_ids)
+        rating = np.random.choice([1,2,3,4,5], p=[0.05,0.1,0.3,0.35,0.2])
+        ts = start + timedelta(days=random.randint(0,1400))
+        ratings.append({'userId': u, 'movieId': m, 'rating': rating, 'timestamp': int(ts.timestamp())})
+    return pd.DataFrame(ratings)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--n_users', type=int, default=1000)
+    parser.add_argument('--n_movies', type=int, default=1000)
+    parser.add_argument('--n_ratings', type=int, default=20000)
+    parser.add_argument('--output_dir', default='data')
+    args = parser.parse_args()
+
+    os.makedirs(args.output_dir, exist_ok=True)
+    movies = generate_movies(args.n_movies)
+    users = generate_users(args.n_users)
+    ratings = generate_ratings(args.n_users, args.n_movies, args.n_ratings)
+
+    movies.to_csv(os.path.join(args.output_dir, 'movies.csv'), index=False)
+    users.to_csv(os.path.join(args.output_dir, 'users.csv'), index=False)
+    ratings.to_csv(os.path.join(args.output_dir, 'ratings.csv'), index=False)
+    print(f"Generated dataset in {args.output_dir}: movies.csv, users.csv, ratings.csv")
+
+
+
+
+
+#sample_small....
+# This is a small sample; use the generator script for full data
+userId,movieId,rating,timestamp
+U00001,M00001,5,1560000000
+U00001,M00002,4,1560000200
+U00002,M00001,3,1560000500
+U00003,M00005,4,1560001000
+U00002,M00002,5,1560002000
